@@ -1,0 +1,21 @@
+name: Test API Continuous Integration
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Test API build
+    runs-on: ubuntu-latest
+    container:
+      image: ermiry/cerver:beta-2.0b-21
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get Information
+        run: ls -la
