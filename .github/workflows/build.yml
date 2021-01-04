@@ -17,5 +17,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get Information
-        run: ls -la
+      - name: Build Sources
+        run: make
