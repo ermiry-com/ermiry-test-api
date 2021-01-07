@@ -8,6 +8,8 @@
 #include <cerver/cerver.h>
 #include <cerver/version.h>
 
+#include <cerver/http/http.h>
+
 #include <cerver/utils/log.h>
 
 #include "version.h"
@@ -46,7 +48,7 @@ int main (int argc, char const **argv) {
 	cerver_version_print_full ();
 
 	cerver_log_line_break ();
-	pocket_version_print_full ();
+	test_version_print_full ();
 	cerver_log_line_break ();
 
 	cerver_end ();
