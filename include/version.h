@@ -3,8 +3,8 @@
 
 #define TEST_VERSION					"0.1"
 #define TEST_VERSION_NAME				"Version 0.1"
-#define TEST_VERSION_DATE				"03/01/2020"
-#define TEST_VERSION_TIME				"23:12 CST"
+#define TEST_VERSION_DATE				"06/01/2020"
+#define TEST_VERSION_TIME				"23:48 CST"
 #define TEST_VERSION_AUTHOR				"Erick Salas"
 
 // print full pocket version information
