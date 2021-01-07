@@ -6,8 +6,8 @@ MATH 		:= -lm
 OPENSSL		:= -l ssl -l crypto
 
 # CMONGO 		:= `pkg-config --libs --cflags libmongoc-1.0`
-CMONGO 		:= -l mongoc-1.0 -l bson-1.0
-CMONGO_INC	:= -I /usr/local/include/libbson-1.0 -I /usr/local/include/libmongoc-1.0
+# CMONGO 		:= -l mongoc-1.0 -l bson-1.0
+# CMONGO_INC	:= -I /usr/local/include/libbson-1.0 -I /usr/local/include/libmongoc-1.0
 
 CERVER		:= -l cerver
 CERVER_INC	:= -I /usr/local/include/cerver
