@@ -6,8 +6,11 @@ MATH 		:= -lm
 OPENSSL		:= -l ssl -l crypto
 
 # CMONGO 		:= `pkg-config --libs --cflags libmongoc-1.0`
-# CMONGO 		:= -l mongoc-1.0 -l bson-1.0
-# CMONGO_INC	:= -I /usr/local/include/libbson-1.0 -I /usr/local/include/libmongoc-1.0
+MONGOC 		:= -l mongoc-1.0 -l bson-1.0
+MONGOC_INC	:= -I /usr/local/include/libbson-1.0 -I /usr/local/include/libmongoc-1.0
+
+CMONGO		:= -l cmongo
+CMONGO_INC	:= -I /usr/local/include/cmongo
 
 CERVER		:= -l cerver
 CERVER_INC	:= -I /usr/local/include/cerver
@@ -26,8 +29,8 @@ DEPEXT      := d
 OBJEXT      := o
 
 CFLAGS      := $(DEVELOPMENT) -Wall -Wno-unknown-pragmas
-LIB         := -L /usr/local/lib $(PTHREAD) $(MATH) $(OPENSSL) $(CMONGO) $(CERVER)
-INC         := -I $(INCDIR) -I /usr/local/include $(CMONGO_INC) $(CERVER_INC)
+LIB         := -L /usr/local/lib $(PTHREAD) $(MATH) $(OPENSSL) $(MONGOC) $(CERVER) $(CMONGO)
+INC         := -I $(INCDIR) -I /usr/local/include $(MONGOC_INC) $(CERVER_INC) $(CMONGO_INC)
 INCDEP      := -I $(INCDIR)
 
 SOURCES     := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
