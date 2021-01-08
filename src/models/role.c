@@ -110,7 +110,7 @@ bson_t *role_bson_create (Role *role) {
 				const char *key = NULL;
 				size_t keylen = 0;
 
-				for (int i = 0; i < role->n_actions; i++) {
+				for (unsigned int i = 0; i < role->n_actions; i++) {
 					keylen = bson_uint32_to_string (i, &key, buf, sizeof (buf));
 					(void) bson_append_utf8 (
 						&actions_array, key, (int) keylen, role->actions[i], -1
@@ -334,7 +334,7 @@ bson_t *role_bson_create_update (Role *role) {
 				const char *key = NULL;
 				size_t keylen = 0;
 
-				for (int i = 0; i < role->n_actions; i++) {
+				for (unsigned int i = 0; i < role->n_actions; i++) {
 					keylen = bson_uint32_to_string (i, &key, buf, sizeof (buf));
 					(void) bson_append_utf8 (
 						&actions_array, key, (int) keylen, role->actions[i], -1
