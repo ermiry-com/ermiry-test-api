@@ -1,0 +1,21 @@
+name: Test Production Integration
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    name: Test API production build
+    runs-on: ubuntu-latest
+    container:
+      image: ermiry/cerver:beta-2.0b-23-buildev
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Sources
+        run: make TYPE=production
