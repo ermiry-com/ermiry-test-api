@@ -1,3 +1,5 @@
+TYPE		:= development
+
 TARGET      := test-api
 
 PTHREAD 	:= -l pthread
@@ -15,9 +17,13 @@ CMONGO_INC	:= -I /usr/local/include/cmongo
 CERVER		:= -l cerver
 CERVER_INC	:= -I /usr/local/include/cerver
 
-DEVELOPMENT	:= -g -D ERMIRY_DEBUG
+DEVELOPMENT	:= -D ERMIRY_DEBUG
+
+DEFINES		:= -D _GNU_SOURCE
 
 CC          := gcc
+
+GCCVGTEQ8 	:= $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 8)
 
 SRCDIR      := src
 INCDIR      := include
@@ -28,7 +34,37 @@ SRCEXT      := c
 DEPEXT      := d
 OBJEXT      := o
 
-CFLAGS      := $(DEVELOPMENT) -Wall -Wno-unknown-pragmas
+# common flags
+# -Wconversion
+COMMON		:= -march=native \
+				-Wall -Wno-unknown-pragmas \
+				-Wfloat-equal -Wdouble-promotion -Wint-to-pointer-cast -Wwrite-strings \
+				-Wtype-limits -Wsign-compare -Wmissing-field-initializers \
+				-Wuninitialized -Wmaybe-uninitialized -Wempty-body \
+				-Wunused-but-set-parameter -Wunused-result \
+				-Wformat -Wformat-nonliteral -Wformat-security -Wformat-overflow -Wformat-signedness -Wformat-truncation
+
+# main
+CFLAGS      := $(DEFINES)
+
+ifeq ($(TYPE), development)
+	CFLAGS += -g -fasynchronous-unwind-tables $(DEVELOPMENT)
+else ifeq ($(TYPE), test)
+	CFLAGS += -g -fasynchronous-unwind-tables -D_FORTIFY_SOURCE=2 -fstack-protector -O2
+else
+	CFLAGS += -D_FORTIFY_SOURCE=2 -O2
+endif
+
+CFLAGS += -std=c11 -Wpedantic -pedantic-errors
+# check for compiler version
+ifeq "$(GCCVGTEQ8)" "1"
+	CFLAGS += -Wcast-function-type
+else
+	CFLAGS += -Wbad-function-cast
+endif
+
+CFLAGS += $(COMMON)
+
 LIB         := -L /usr/local/lib $(PTHREAD) $(MATH) $(OPENSSL) $(MONGOC) $(CERVER) $(CMONGO)
 INC         := -I $(INCDIR) -I /usr/local/include $(MONGOC_INC) $(CERVER_INC) $(CMONGO_INC)
 INCDEP      := -I $(INCDIR)
