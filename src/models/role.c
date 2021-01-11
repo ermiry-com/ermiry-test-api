@@ -277,7 +277,7 @@ Role *role_get_by_name (const char *name, bool actions) {
 		const bson_t *role_doc = role_find_by_name (name, actions);
 		if (role_doc) {
 			role = role_doc_parse (role_doc);
-			bson_destroy ((bson_t *) role_doc);
+			// bson_destroy ((bson_t *) role_doc);
 		}
 	}
 
