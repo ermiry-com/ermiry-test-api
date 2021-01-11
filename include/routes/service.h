@@ -1,6 +1,9 @@
 #ifndef _TEST_ROUTES_SERVICE_H_
 #define _TEST_ROUTES_SERVICE_H_
 
+struct _HttpReceive;
+struct _HttpRequest;
+
 // GET /api/test
 extern void test_handler (
 	const struct _HttpReceive *http_receive,
