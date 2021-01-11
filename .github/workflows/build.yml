@@ -13,7 +13,7 @@ jobs:
     name: Test API build
     runs-on: ubuntu-latest
     container:
-      image: ermiry/cerver:beta-2.0b-23-buildev
+      image: ermiry/cerver-cmongo:buildev-2.0b-23
     steps:
       - uses: actions/checkout@v2
 
