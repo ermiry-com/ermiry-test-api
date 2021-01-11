@@ -52,7 +52,15 @@
   - 400 on bad request due to missing values
   - 500 on server error
 
-### POST api/users/values
+### GET api/values
+**Access:** Private \
+**Description:** Gets all the user's values \
+**Returns:**
+  - 200 and success response
+  - 401 on failed auth
+  - 500 on server error
+
+### POST api/values
 **Access:** Private \
 **Description:** Create a new user value \
 **Body:** In JSON format
@@ -62,18 +70,20 @@
 **Returns:**
   - 200 and success response
   - 400 on bad request due to missing values
+  - 401 on failed auth
   - 500 on server error
 
-### GET api/users/values/:id/info
+### GET api/values/:id/info
 **Access:** Private \
 **Description:** Get \
 **Returns:**
   - 200 and value's information in json format
   - 400 on bad request due to missing values
+  - 401 on failed auth
   - 404 if the value wasn't found
   - 500 on server error
 
-### PUT api/users/values/:id/update
+### PUT api/values/:id/update
 **Access:** Private \
 **Description:** Updates an existing user value \
 **Body:** In JSON format
@@ -83,14 +93,16 @@
 **Returns:**
   - 200 and success response
   - 400 on bad request due to missing values
+  - 401 on failed auth
   - 404 if the value wasn't found
   - 500 on server error
 
-### DELETE api/users/values/:id/remove
+### DELETE api/values/:id/remove
 **Access:** Private \
 **Description:** Delete an existing user value \
 **Returns:**
   - 200 and success response
   - 400 on bad request due to missing values
+  - 401 on failed auth
   - 404 if the value wasn't found
   - 500 on server error
