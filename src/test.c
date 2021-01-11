@@ -28,6 +28,7 @@
 #include "models/action.h"
 #include "models/role.h"
 #include "models/user.h"
+#include "models/value.h"
 
 RuntimeType RUNTIME = RUNTIME_TYPE_NONE;
 
@@ -284,8 +285,11 @@ static unsigned int test_mongo_connect (void) {
 			// open handle to roles collection
 			errors |= roles_collection_get ();
 
-			// open handle to user collection
+			// open handle to users collection
 			errors |= users_collection_get ();
+
+			// open handle to values collection
+			errors |= values_collection_get ();
 
 			connected_to_mongo = true;
 		}
@@ -392,6 +396,8 @@ static unsigned int test_mongo_end (void) {
 		roles_collection_close ();
 
 		users_collection_close ();
+
+		values_collection_close ();
 
 		mongo_disconnect ();
 	}
