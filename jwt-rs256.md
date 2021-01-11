@@ -1,5 +1,11 @@
 # Generate RSA-256 Keys
 
+0. Create a dedicated keys directory
+
+```
+mkdir keys
+```
+
 1. Run the following command to generate key pair and don't add passphrase
 
 ```
