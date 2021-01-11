@@ -1,22 +1,7 @@
 ARG CERVER_VERSION=2.0b-23
 
-FROM ermiry/cerver-cmongo:buildev-${CERVER_VERSION} as builder
+FROM ermiry/cerver-cmongo:buildev-${CERVER_VERSION}
 
-WORKDIR /opt/test
-
-# build sources
-COPY . .
-RUN make -j4
-
-############
-FROM ermiry/cerver:beta-${CERVER_VERSION}
-
-ARG BUILD_DEPS='gdb'
-
-RUN apt-get update && apt-get install -y ${BUILD_DEPS} && apt-get clean
-
-# test api
 WORKDIR /home/test
-COPY --from=builder /opt/test/bin/test-api /home/test/
 
 CMD ["/bin/bash"]
