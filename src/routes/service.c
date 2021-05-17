@@ -15,6 +15,8 @@
 
 #include "models/user.h"
 
+#include "controllers/service.h"
+
 // GET /api/test
 void test_handler (
 	const HttpReceive *http_receive,
@@ -52,7 +54,17 @@ void test_auth_handler (
 	}
 
 	else {
-		(void) http_response_send (bad_user, http_receive);
+		(void) http_response_send (bad_user_error, http_receive);
 	}
+
+}
+
+// GET *
+void test_catch_all_handler (
+	const HttpReceive *http_receive,
+	const HttpRequest *request
+) {
+
+	http_response_send (catch_all, http_receive);
 
 }
