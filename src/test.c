@@ -22,13 +22,15 @@
 #include "runtime.h"
 #include "version.h"
 
-#include "controllers/roles.h"
-#include "controllers/users.h"
-
 #include "models/action.h"
 #include "models/role.h"
 #include "models/user.h"
 #include "models/value.h"
+
+#include "controllers/roles.h"
+#include "controllers/service.h"
+#include "controllers/users.h"
+#include "controllers/values.h"
 
 RuntimeType RUNTIME = RUNTIME_TYPE_NONE;
 
@@ -45,22 +47,15 @@ static const String *MONGO_DB = NULL;
 const String *PRIV_KEY = NULL;
 const String *PUB_KEY = NULL;
 
-HttpResponse *oki_doki = NULL;
-HttpResponse *bad_request = NULL;
-HttpResponse *server_error = NULL;
-HttpResponse *bad_user = NULL;
-HttpResponse *missing_values = NULL;
-
-HttpResponse *test_works = NULL;
-HttpResponse *current_version = NULL;
+bool ENABLE_USERS_ROUTES = false;
 
 static void test_env_get_runtime (void) {
-	
+
 	char *runtime_env = getenv ("RUNTIME");
 	if (runtime_env) {
 		RUNTIME = runtime_from_string (runtime_env);
 		cerver_log_success (
-			"RUNTIME -> %d\n", runtime_to_string (RUNTIME)
+			"RUNTIME -> %s", runtime_to_string (RUNTIME)
 		);
 	}
 
@@ -71,7 +66,7 @@ static void test_env_get_runtime (void) {
 }
 
 static unsigned int test_env_get_port (void) {
-	
+
 	unsigned int retval = 1;
 
 	char *port_env = getenv ("PORT");
@@ -95,7 +90,7 @@ static void test_env_get_cerver_receive_buffer_size (void) {
 	if (buffer_size) {
 		CERVER_RECEIVE_BUFFER_SIZE = (unsigned int) atoi (buffer_size);
 		cerver_log_success (
-			"CERVER_RECEIVE_BUFFER_SIZE -> %d\n", CERVER_RECEIVE_BUFFER_SIZE
+			"CERVER_RECEIVE_BUFFER_SIZE -> %d", CERVER_RECEIVE_BUFFER_SIZE
 		);
 	}
 
@@ -112,7 +107,7 @@ static void test_env_get_cerver_th_threads (void) {
 	char *th_threads = getenv ("CERVER_TH_THREADS");
 	if (th_threads) {
 		CERVER_TH_THREADS = (unsigned int) atoi (th_threads);
-		cerver_log_success ("CERVER_TH_THREADS -> %d\n", CERVER_TH_THREADS);
+		cerver_log_success ("CERVER_TH_THREADS -> %d", CERVER_TH_THREADS);
 	}
 
 	else {
@@ -129,7 +124,7 @@ static void test_env_get_cerver_connection_queue (void) {
 	char *connection_queue = getenv ("CERVER_CONNECTION_QUEUE");
 	if (connection_queue) {
 		CERVER_CONNECTION_QUEUE = (unsigned int) atoi (connection_queue);
-		cerver_log_success ("CERVER_CONNECTION_QUEUE -> %d\n", CERVER_CONNECTION_QUEUE);
+		cerver_log_success ("CERVER_CONNECTION_QUEUE -> %d", CERVER_CONNECTION_QUEUE);
 	}
 
 	else {
@@ -236,6 +231,29 @@ static unsigned int test_env_get_public_key (void) {
 
 }
 
+static void test_env_get_enable_users_routes (void) {
+
+	char *enable_users = getenv ("ENABLE_USERS_ROUTES");
+	if (enable_users) {
+		if (!strcmp (enable_users, "TRUE")) {
+			ENABLE_USERS_ROUTES = true;
+			cerver_log_success ("ENABLE_USERS_ROUTES -> TRUE\n");
+		}
+
+		else {
+			ENABLE_USERS_ROUTES = false;
+			cerver_log_success ("ENABLE_USERS_ROUTES -> FALSE\n");
+		}
+	}
+
+	else {
+		cerver_log_warning (
+			"Failed to get ENABLE_USERS_ROUTES from env - using default FALSE!"
+		);
+	}
+
+}
+
 static unsigned int test_init_env (void) {
 
 	unsigned int errors = 0;
@@ -260,6 +278,8 @@ static unsigned int test_init_env (void) {
 
 	errors |= test_env_get_public_key ();
 
+	test_env_get_enable_users_routes ();
+
 	return errors;
 
 }
@@ -279,17 +299,13 @@ static unsigned int test_mongo_connect (void) {
 		if (!mongo_ping_db ()) {
 			cerver_log_success ("Connected to Mongo DB!");
 
-			// open handle to actions collection
-			errors |= actions_collection_get ();
+			errors |= actions_model_init ();
 
-			// open handle to roles collection
-			errors |= roles_collection_get ();
+			errors |= roles_model_init ();
 
-			// open handle to users collection
-			errors |= users_collection_get ();
+			errors |= users_model_init ();
 
-			// open handle to values collection
-			errors |= values_collection_get ();
+			errors |= values_model_init ();
 
 			connected_to_mongo = true;
 		}
@@ -322,82 +338,39 @@ static unsigned int test_mongo_init (void) {
 
 }
 
-static unsigned int test_init_responses (void) {
-
-	unsigned int retval = 1;
-
-	oki_doki = http_response_json_key_value (
-		(http_status) 200, "oki", "doki"
-	);
-
-	bad_request = http_response_json_key_value (
-		(http_status) 400, "error", "Bad request!"
-	);
-
-	server_error = http_response_json_key_value (
-		(http_status) 500, "error", "Internal server error!"
-	);
-
-	bad_user = http_response_json_key_value (
-		(http_status) 400, "error", "Bad user!"
-	);
-
-	missing_values = http_response_json_key_value (
-		(http_status) 400, "error", "Missing values!"
-	);
-
-	test_works = http_response_json_key_value (
-		(http_status) 200, "msg", "test works!"
-	);
-
-	char *status = c_string_create (
-		"%s - %s", TEST_VERSION_NAME, TEST_VERSION_DATE
-	);
-
-	if (status) {
-		current_version = http_response_json_key_value (
-			(http_status) 200, "version", status
-		);
-
-		free (status);
-	}
-
-	if (
-		oki_doki && bad_request && server_error && bad_user && missing_values
-		&& test_works && current_version
-	) retval = 0;
-
-	return retval;
-
-}
-
 // inits test main values
 unsigned int test_init (void) {
 
-	unsigned int errors = 0;
+	unsigned int retval = 1;
 
 	if (!test_init_env ()) {
+		unsigned int errors = 0;
+
 		errors |= test_mongo_init ();
+
+		errors |= test_service_init ();
 
 		errors |= test_users_init ();
 
-		errors |= test_init_responses ();
+		errors |= test_values_init ();
+
+		retval = errors;
 	}
 
-	return errors;  
+	return retval;
 
 }
 
 static unsigned int test_mongo_end (void) {
 
 	if (mongo_get_status () == MONGO_STATUS_CONNECTED) {
-		actions_collection_close ();
+		actions_model_end ();
 
-		roles_collection_close ();
+		roles_model_end ();
 
-		users_collection_close ();
+		users_model_end ();
 
-		values_collection_close ();
+		values_model_end ();
 
 		mongo_disconnect ();
 	}
@@ -417,14 +390,9 @@ unsigned int test_end (void) {
 
 	test_users_end ();
 
-	http_respponse_delete (oki_doki);
-	http_respponse_delete (bad_request);
-	http_respponse_delete (server_error);
-	http_respponse_delete (bad_user);
-	http_respponse_delete (missing_values);
+	test_values_end ();
 
-	http_respponse_delete (test_works);
-	http_respponse_delete (current_version);
+	test_service_end ();
 
 	str_delete ((String *) MONGO_URI);
 	str_delete ((String *) MONGO_APP_NAME);
