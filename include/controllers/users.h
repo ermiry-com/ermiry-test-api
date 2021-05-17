@@ -1,9 +1,9 @@
-#ifndef _TEST_CONTROLLERS_USERS_H_
-#define _TEST_CONTROLLERS_USERS_H_
+#ifndef _TEST_USERS_H_
+#define _TEST_USERS_H_
 
 #include <bson/bson.h>
 
-#include <cmongo/select.h>
+#include <cerver/collections/dlist.h>
 
 #include "models/user.h"
 
@@ -12,8 +12,39 @@
 struct _HttpReceive;
 struct _HttpResponse;
 
+typedef enum TestUserInput {
+
+	TEST_USER_INPUT_NONE			= 0,
+	TEST_USER_INPUT_NAME			= 1,
+	TEST_USER_INPUT_USERNAME		= 2,
+	TEST_USER_INPUT_EMAIL			= 4,
+	TEST_USER_INPUT_PASSWORD		= 8,
+	TEST_USER_INPUT_CONFIRM			= 16,
+	TEST_USER_INPUT_MATCH			= 32,
+
+} TestUserInput;
+
+#define TEST_USER_ERROR_MAP(XX)					\
+	XX(0,	NONE, 				None)				\
+	XX(1,	BAD_REQUEST, 		Bad Request)		\
+	XX(2,	MISSING_VALUES, 	Missing Values)		\
+	XX(3,	REPEATED, 			Existing Email)		\
+	XX(4,	NOT_FOUND, 			Not found)			\
+	XX(5,	WRONG_PSWD, 		Wrong password)		\
+	XX(6,	SERVER_ERROR, 		Server Error)
+
+typedef enum TestUserError {
+
+	#define XX(num, name, string) TEST_USER_ERROR_##name = num,
+	TEST_USER_ERROR_MAP (XX)
+	#undef XX
+
+} TestUserError;
+
 extern const bson_t *user_login_query_opts;
-extern CMongoSelect *user_login_select;
+extern const bson_t *user_transactions_query_opts;
+extern const bson_t *user_categories_query_opts;
+extern const bson_t *user_places_query_opts;
 
 extern struct _HttpResponse *users_works;
 extern struct _HttpResponse *missing_user_values;
@@ -38,7 +69,7 @@ extern User *test_user_get (void);
 extern User *test_user_get_by_email (const char *email);
 
 extern u8 test_user_check_by_email (
-	const struct _HttpReceive *http_receive, const char *email
+	const char *email
 );
 
 // {
@@ -50,6 +81,20 @@ extern u8 test_user_check_by_email (
 //   "username": "erick"
 // }
 extern void *test_user_parse_from_json (void *user_json_ptr);
+
+extern unsigned int test_user_generate_token (
+	const User *user, char *json_token, size_t *json_len
+);
+
+extern User *test_user_register (
+	const String *request_body, 
+	TestUserError *error, TestUserInput *input
+);
+
+extern User *test_user_login (
+	const String *request_body, 
+	TestUserError *error, TestUserInput *input
+);
 
 extern void test_user_delete (void *user_ptr);
 
