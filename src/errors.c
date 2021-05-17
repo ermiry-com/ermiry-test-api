@@ -3,10 +3,12 @@
 #include <cerver/http/http.h>
 #include <cerver/http/response.h>
 
-#include "test.h"
 #include "errors.h"
+#include "test.h"
 
-const char *test_error_to_string (TestError type) {
+#include "controllers/service.h"
+
+const char *test_error_to_string (const TestError type) {
 
 	switch (type) {
 		#define XX(num, name, string) case TEST_ERROR_##name: return #string;
@@ -19,7 +21,7 @@ const char *test_error_to_string (TestError type) {
 }
 
 void test_error_send_response (
-	TestError error,
+	const TestError error,
 	const HttpReceive *http_receive
 ) {
 
@@ -27,7 +29,7 @@ void test_error_send_response (
 		case TEST_ERROR_NONE: break;
 
 		case TEST_ERROR_BAD_REQUEST:
-			(void) http_response_send (bad_request, http_receive);
+			(void) http_response_send (bad_request_error, http_receive);
 			break;
 
 		case TEST_ERROR_MISSING_VALUES:
@@ -35,7 +37,11 @@ void test_error_send_response (
 			break;
 
 		case TEST_ERROR_BAD_USER:
-			(void) http_response_send (bad_user, http_receive);
+			(void) http_response_send (bad_user_error, http_receive);
+			break;
+
+		case TEST_ERROR_NOT_FOUND:
+			(void) http_response_send (not_found_error, http_receive);
 			break;
 
 		case TEST_ERROR_SERVER_ERROR:
