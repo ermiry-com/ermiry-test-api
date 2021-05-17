@@ -12,6 +12,7 @@
 #include <cerver/http/route.h>
 
 #include <cerver/utils/log.h>
+#include <cerver/utils/utils.h>
 
 #include "test.h"
 #include "version.h"
@@ -23,9 +24,10 @@
 #include "routes/values.h"
 
 static Cerver *test_api = NULL;
+HttpCerver *http_cerver = NULL;
 
 void end (int dummy) {
-	
+
 	if (test_api) {
 		cerver_stats_print (test_api, false, false);
 		cerver_log_msg ("\nHTTP Cerver stats:\n");
@@ -62,6 +64,37 @@ static void test_set_service_routes (HttpCerver *http_cerver) {
 
 }
 
+static void test_set_values_routes (HttpCerver *http_cerver) {
+
+	// GET api/values
+	HttpRoute *values_route = http_route_create (REQUEST_METHOD_GET, "values", test_values_handler);
+	http_route_set_auth (values_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
+	http_route_set_decode_data (values_route, test_user_parse_from_json, test_user_delete);
+	http_cerver_route_register (http_cerver, values_route);
+
+	// POST api/values
+	http_route_set_handler (values_route, REQUEST_METHOD_POST, test_value_create_handler);
+
+	// GET api/values/:id/info
+	HttpRoute *value_info_route = http_route_create (REQUEST_METHOD_GET, "values/:id/info", test_value_get_handler);
+	http_route_set_auth (value_info_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
+	http_route_set_decode_data (value_info_route, test_user_parse_from_json, test_user_delete);
+	http_route_child_add (values_route, value_info_route);
+
+	// PUT api/values/:id/update
+	HttpRoute *value_update_route = http_route_create (REQUEST_METHOD_PUT, "values/:id/update", test_value_update_handler);
+	http_route_set_auth (value_update_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
+	http_route_set_decode_data (value_update_route, test_user_parse_from_json, test_user_delete);
+	http_route_child_add (values_route, value_update_route);
+
+	// DELETE api/values/:id/remove
+	HttpRoute *value_remove_route = http_route_create (REQUEST_METHOD_DELETE, "values/:id/remove", test_value_delete_handler);
+	http_route_set_auth (value_remove_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
+	http_route_set_decode_data (value_remove_route, test_user_parse_from_json, test_user_delete);
+	http_route_child_add (values_route, value_remove_route);
+
+}
+
 static void test_set_users_routes (HttpCerver *http_cerver) {
 
 	/* register top level route */
@@ -77,36 +110,6 @@ static void test_set_users_routes (HttpCerver *http_cerver) {
 	// POST api/users/register
 	HttpRoute *users_register_route = http_route_create (REQUEST_METHOD_POST, "register", users_register_handler);
 	http_route_child_add (users_route, users_register_route);
-
-}
-
-static void test_set_values_routes (HttpCerver *http_cerver) {
-
-	// GET api/values
-	HttpRoute *values_route = http_route_create (REQUEST_METHOD_GET, "api/values", test_values_handler);
-	http_route_set_auth (values_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
-	http_route_set_decode_data (values_route, test_user_parse_from_json, test_user_delete);
-
-	// POST api/values
-	http_route_set_handler (values_route, REQUEST_METHOD_POST, test_value_create_handler);
-
-	// GET api/values/:id/info
-	HttpRoute *value_info_route = http_route_create (REQUEST_METHOD_GET, ":id/info", test_value_get_handler);
-	http_route_set_auth (value_info_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
-	http_route_set_decode_data (value_info_route, test_user_parse_from_json, test_user_delete);
-	http_route_child_add (values_route, value_info_route);
-
-	// PUT api/values/:id/update
-	HttpRoute *value_update_route = http_route_create (REQUEST_METHOD_GET, ":id/update", test_value_update_handler);
-	http_route_set_auth (value_update_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
-	http_route_set_decode_data (value_update_route, test_user_parse_from_json, test_user_delete);
-	http_route_child_add (values_route, value_update_route);
-
-	// DELETE api/values/:id/remove
-	HttpRoute *value_remove_route = http_route_create (REQUEST_METHOD_GET, ":id/remove", test_value_delete_handler);
-	http_route_set_auth (value_remove_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
-	http_route_set_decode_data (value_remove_route, test_user_parse_from_json, test_user_delete);
-	http_route_child_add (values_route, value_remove_route);
 
 }
 
@@ -130,20 +133,25 @@ static void start (void) {
 		cerver_set_reusable_address_flags (test_api, true);
 
 		/*** web cerver configuration ***/
-		HttpCerver *http_cerver = (HttpCerver *) test_api->cerver_data;
+		http_cerver = (HttpCerver *) test_api->cerver_data;
 
 		http_cerver_auth_set_jwt_algorithm (http_cerver, JWT_ALG_RS256);
-		http_cerver_auth_set_jwt_priv_key_filename (http_cerver, PRIV_KEY->str);
+		if (ENABLE_USERS_ROUTES) {
+			http_cerver_auth_set_jwt_priv_key_filename (http_cerver, PRIV_KEY->str);
+		}
+
 		http_cerver_auth_set_jwt_pub_key_filename (http_cerver, PUB_KEY->str);
 
 		test_set_service_routes (http_cerver);
 
-		test_set_users_routes (http_cerver);
-
 		test_set_values_routes (http_cerver);
 
-		// return not found on any mismatch
-		http_cerver_set_not_found_handler (http_cerver);
+		if (ENABLE_USERS_ROUTES) {
+			test_set_users_routes (http_cerver);
+		}
+
+		// add a catch all route
+		http_cerver_set_catch_all_route (http_cerver, test_catch_all_handler);
 
 		if (cerver_start (test_api)) {
 			cerver_log_error (
@@ -165,7 +173,7 @@ static void start (void) {
 
 int main (int argc, char const **argv) {
 
-	srand ((unsigned int) time (NULL));
+	srand (time (NULL));
 
 	// register to the quit signal
 	(void) signal (SIGINT, end);
@@ -178,9 +186,7 @@ int main (int argc, char const **argv) {
 
 	cerver_version_print_full ();
 
-	cerver_log_line_break ();
 	test_version_print_full ();
-	cerver_log_line_break ();
 
 	if (!test_init ()) {
 		start ();
