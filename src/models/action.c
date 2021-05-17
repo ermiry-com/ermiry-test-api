@@ -4,37 +4,36 @@
 #include <bson/bson.h>
 #include <mongoc/mongoc.h>
 
-#include <cerver/utils/log.h>
-
 #include <cmongo/collections.h>
 #include <cmongo/crud.h>
+#include <cmongo/model.h>
 
 #include "models/action.h"
 
-#define ACTIONS_COLL_NAME  				"actions"
+static CMongoModel *actions_model = NULL;
 
-mongoc_collection_t *actions_collection = NULL;
+void action_doc_parse (
+	void *action_ptr, const bson_t *action_doc
+);
 
-unsigned int actions_collection_get (void) {
+unsigned int actions_model_init (void) {
 
 	unsigned int retval = 1;
 
-	actions_collection = mongo_collection_get (ACTIONS_COLL_NAME);
-	if (actions_collection) {
-		retval = 0;
-	}
+	actions_model = cmongo_model_create (ACTIONS_COLL_NAME);
+	if (actions_model) {
+		cmongo_model_set_parser (actions_model, action_doc_parse);
 
-	else {
-		cerver_log_error ("Failed to get handle to actions collection!");
+		retval = 0;
 	}
 
 	return retval;
 
 }
 
-void actions_collection_close (void) {
+void actions_model_end (void) {
 
-	if (actions_collection) mongoc_collection_destroy (actions_collection);
+	cmongo_model_delete (actions_model);
 
 }
 
@@ -63,13 +62,13 @@ RoleAction *action_create (
 	if (action) {
 		if (name) {
 			(void) strncpy (
-				action->name, name, ACTION_NAME_LEN - 1
+				action->name, name, ACTION_NAME_SIZE - 1
 			);
 		}
 
 		if (description) {
 			(void) strncpy (
-				action->description, description, ACTION_DESCRIPTION_LEN - 1
+				action->description, description, ACTION_DESCRIPTION_SIZE - 1
 			);
 		}
 	}
@@ -112,63 +111,39 @@ bson_t *action_bson_create (RoleAction *action) {
 
 }
 
-RoleAction *action_doc_parse (
-	const bson_t *action_doc
+void action_doc_parse (
+	void *action_ptr, const bson_t *action_doc
 ) {
 
-	RoleAction *action = NULL;
+	RoleAction *action = (RoleAction *) action_ptr;
 
-	if (action_doc) {
-		action = action_new ();
+	bson_iter_t iter = { 0 };
+	if (bson_iter_init (&iter, action_doc)) {
+		while (bson_iter_next (&iter)) {
+			const char *key = bson_iter_key (&iter);
+			const bson_value_t *value = bson_iter_value (&iter);
 
-		bson_iter_t iter = { 0 };
-		if (bson_iter_init (&iter, action_doc)) {
-			while (bson_iter_next (&iter)) {
-				const char *key = bson_iter_key (&iter);
-				const bson_value_t *value = bson_iter_value (&iter);
+			if (!strcmp (key, "_id")) {
+				bson_oid_copy (&value->value.v_oid, &action->oid);
+			}
 
-				if (!strcmp (key, "_id")) {
-					bson_oid_copy (&value->value.v_oid, &action->oid);
-				}
+			else if (!strcmp (key, "name") && value->value.v_utf8.str) {
+				(void) strncpy (
+					action->name,
+					value->value.v_utf8.str,
+					ACTION_NAME_SIZE - 1
+				);
+			}
 
-				else if (!strcmp (key, "name") && value->value.v_utf8.str) {
-					(void) strncpy (
-						action->name,
-						value->value.v_utf8.str,
-						ACTION_NAME_LEN - 1
-					);
-				}
-
-				else if (!strcmp (key, "description") && value->value.v_utf8.str) {
-					(void) strncpy (
-						action->description,
-						value->value.v_utf8.str,
-						ACTION_DESCRIPTION_LEN - 1
-					);
-				}
+			else if (!strcmp (key, "description") && value->value.v_utf8.str) {
+				(void) strncpy (
+					action->description,
+					value->value.v_utf8.str,
+					ACTION_DESCRIPTION_SIZE - 1
+				);
 			}
 		}
 	}
-
-	return action;
-
-}
-
-// get an action doc from the db by name
-static const bson_t *action_find_by_name (
-	const char *name
-) {
-
-	const bson_t *retval = NULL;
-
-	bson_t *action_query = bson_new ();
-	if (action_query) {
-		(void) bson_append_utf8 (action_query, "name", -1, name, -1);
-
-		retval = mongo_find_one (actions_collection, action_query, NULL);
-	}
-
-	return retval;
 
 }
 
@@ -178,10 +153,19 @@ RoleAction *action_get_by_name (const char *name) {
 	RoleAction *action = NULL;
 
 	if (name) {
-		const bson_t *action_doc = action_find_by_name (name);
-		if (action_doc) {
-			action = action_doc_parse (action_doc);
-			bson_destroy ((bson_t *) action_doc);
+		action = action_new ();
+
+		bson_t *action_query = bson_new ();
+		if (action_query) {
+			(void) bson_append_utf8 (action_query, "name", -1, name, -1);
+			if (mongo_find_one (
+				actions_model,
+				action_query, NULL,
+				action
+			)) {
+				action_delete (action);
+				action = NULL;
+			}
 		}
 	}
 
@@ -196,7 +180,7 @@ bson_t *action_bson_create_name_query (const char *name) {
 	if (name) {
 		action_query = bson_new ();
 		if (action_query) {
-			bson_append_utf8 (action_query, "name", -1, name, -1);
+			(void) bson_append_utf8 (action_query, "name", -1, name, -1);
 		}
 	}
 
@@ -213,7 +197,7 @@ bson_t *action_bson_create_update (
 	if (name && description) {
 		doc = bson_new ();
 		if (doc) {
-			bson_t set_doc = { 0 };
+			bson_t set_doc = BSON_INITIALIZER;
 			(void) bson_append_document_begin (doc, "$set", -1, &set_doc);
 
 			(void) bson_append_utf8 (&set_doc, "name", -1, name, -1);

@@ -4,21 +4,21 @@
 #include <bson/bson.h>
 #include <mongoc/mongoc.h>
 
-#define ACTION_NAME_LEN				128
-#define ACTION_DESCRIPTION_LEN		256
+#define ACTIONS_COLL_NAME  			"actions"
 
-extern mongoc_collection_t *actions_collection;
+#define ACTION_NAME_SIZE			128
+#define ACTION_DESCRIPTION_SIZE		256
 
-extern unsigned int actions_collection_get (void);
+extern unsigned int actions_model_init (void);
 
-extern void actions_collection_close (void);
+extern void actions_model_end (void);
 
 struct _RoleAction {
 
 	bson_oid_t oid;
 
-	char name[ACTION_NAME_LEN];
-	char description[ACTION_DESCRIPTION_LEN];
+	char name[ACTION_NAME_SIZE];
+	char description[ACTION_DESCRIPTION_SIZE];
 
 };
 
@@ -39,8 +39,8 @@ extern bson_t *action_bson_create (
 	RoleAction *action
 );
 
-extern RoleAction *action_doc_parse (
-	const bson_t *action_doc
+extern void action_doc_parse (
+	void *action_ptr, const bson_t *action_doc
 );
 
 // gets an action form the db by its name
