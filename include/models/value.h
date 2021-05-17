@@ -8,28 +8,27 @@
 
 #include <cerver/types/types.h>
 
-#define	VALUE_ID_LEN			32
-#define VALUE_NAME_LEN			256
-#define VALUE_DATA_LEN			1024
+#define VALUES_COLL_NAME        	"values"
 
-extern mongoc_collection_t *values_collection;
+#define VALUE_ID_SIZE			32
+#define VALUE_NAME_SIZE			256
+#define VALUE_DATA_SIZE			512
 
-// opens handle to value collection
-extern unsigned int values_collection_get (void);
+extern unsigned int values_model_init (void);
 
-extern void values_collection_close (void);
+extern void values_model_end (void);
 
 typedef struct Value {
 
 	// value's unique id
 	bson_oid_t oid;
-	char id[VALUE_ID_LEN];
+	char id[VALUE_ID_SIZE];
 
 	// reference to the owner of this value
 	bson_oid_t user_oid;
 
-	char name[VALUE_NAME_LEN];
-	char data[VALUE_DATA_LEN];
+	char name[VALUE_NAME_SIZE];
+	char data[VALUE_DATA_SIZE];
 
 	// when the value was created
 	time_t date;
@@ -44,32 +43,42 @@ extern void value_print (Value *value);
 
 extern bson_t *value_query_oid (const bson_oid_t *oid);
 
-extern const bson_t *value_find_by_oid (
-	const bson_oid_t *oid, const bson_t *query_opts
+extern bson_t *value_query_by_oid_and_user (
+	const bson_oid_t *oid, const bson_oid_t *user_oid
 );
 
 extern u8 value_get_by_oid (
-	Value *trans, const bson_oid_t *oid, const bson_t *query_opts
-);
-
-extern const bson_t *value_find_by_oid_and_user (
-	const bson_oid_t *oid, const bson_oid_t *user_oid,
-	const bson_t *query_opts
+	Value *value, const bson_oid_t *oid, const bson_t *query_opts
 );
 
 extern u8 value_get_by_oid_and_user (
-	Value *trans,
+	Value *value,
 	const bson_oid_t *oid, const bson_oid_t *user_oid,
 	const bson_t *query_opts
 );
 
-extern bson_t *value_to_bson (Value *trans);
-
-extern bson_t *value_update_bson (Value *trans);
+extern u8 value_get_by_oid_and_user_to_json (
+	const bson_oid_t *oid, const bson_oid_t *user_oid,
+	const bson_t *query_opts,
+	char **json, size_t *json_len
+);
 
 // get all the values that are related to a user
 extern mongoc_cursor_t *values_get_all_by_user (
 	const bson_oid_t *user_oid, const bson_t *opts
+);
+
+extern unsigned int values_get_all_by_user_to_json (
+	const bson_oid_t *user_oid, const bson_t *opts,
+	char **json, size_t *json_len
+);
+
+extern unsigned int value_insert_one (const Value *value);
+
+extern unsigned int value_update_one (const Value *value);
+
+extern unsigned int value_delete_one_by_oid_and_user (
+	const bson_oid_t *oid, const bson_oid_t *user_oid
 );
 
 #endif
