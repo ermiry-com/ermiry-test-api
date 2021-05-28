@@ -76,19 +76,19 @@ static void test_set_values_routes (HttpCerver *http_cerver) {
 	http_route_set_handler (values_route, REQUEST_METHOD_POST, test_value_create_handler);
 
 	// GET /api/values/:id/info
-	HttpRoute *value_info_route = http_route_create (REQUEST_METHOD_GET, "values/:id/info", test_value_get_handler);
+	HttpRoute *value_info_route = http_route_create (REQUEST_METHOD_GET, ":id/info", test_value_get_handler);
 	http_route_set_auth (value_info_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_info_route, test_user_parse_from_json, test_user_delete);
 	http_route_child_add (values_route, value_info_route);
 
 	// PUT /api/values/:id/update
-	HttpRoute *value_update_route = http_route_create (REQUEST_METHOD_PUT, "values/:id/update", test_value_update_handler);
+	HttpRoute *value_update_route = http_route_create (REQUEST_METHOD_PUT, ":id/update", test_value_update_handler);
 	http_route_set_auth (value_update_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_update_route, test_user_parse_from_json, test_user_delete);
 	http_route_child_add (values_route, value_update_route);
 
 	// DELETE /api/values/:id/remove
-	HttpRoute *value_remove_route = http_route_create (REQUEST_METHOD_DELETE, "values/:id/remove", test_value_delete_handler);
+	HttpRoute *value_remove_route = http_route_create (REQUEST_METHOD_DELETE, ":id/remove", test_value_delete_handler);
 	http_route_set_auth (value_remove_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_remove_route, test_user_parse_from_json, test_user_delete);
 	http_route_child_add (values_route, value_remove_route);
