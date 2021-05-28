@@ -102,7 +102,6 @@ void users_register_handler (
 		request->body, &error, &input
 	);
 
-	// TODO: handle errors
 	switch (error) {
 		case TEST_USER_ERROR_NONE: {
 			(void) test_user_generate_token (
@@ -126,10 +125,21 @@ void users_register_handler (
 			users_send_input_error (http_receive, input);
 			break;
 
-		case TEST_USER_ERROR_REPEATED: break;
-		case TEST_USER_ERROR_NOT_FOUND: break;
-		case TEST_USER_ERROR_WRONG_PSWD: break;
-		case TEST_USER_ERROR_SERVER_ERROR: break;
+		case TEST_USER_ERROR_REPEATED:
+			(void) http_response_send (repeated_email, http_receive);
+			break;
+		
+		case TEST_USER_ERROR_NOT_FOUND:
+			(void) http_response_send (not_found_error, http_receive);
+			break;
+
+		case TEST_USER_ERROR_WRONG_PSWD:
+			(void) http_response_send (wrong_password, http_receive);
+			break;
+
+		case TEST_USER_ERROR_SERVER_ERROR:
+			(void) http_response_send (server_error, http_receive);
+			break;
 
 		default: break;
 	}
@@ -152,7 +162,6 @@ void users_login_handler (
 		request->body, &error, &input
 	);
 
-	// TODO: handle errors
 	switch (error) {
 		case TEST_USER_ERROR_NONE: {
 			(void) test_user_generate_token (
@@ -176,9 +185,17 @@ void users_login_handler (
 			users_send_input_error (http_receive, input);
 			break;
 
-		case TEST_USER_ERROR_NOT_FOUND: break;
-		case TEST_USER_ERROR_WRONG_PSWD: break;
-		case TEST_USER_ERROR_SERVER_ERROR: break;
+		case TEST_USER_ERROR_NOT_FOUND:
+			(void) http_response_send (not_found_error, http_receive);
+			break;
+
+		case TEST_USER_ERROR_WRONG_PSWD:
+			(void) http_response_send (wrong_password, http_receive);
+			break;
+
+		case TEST_USER_ERROR_SERVER_ERROR:
+			(void) http_response_send (server_error, http_receive);
+			break;
 
 		default: break;
 	}
