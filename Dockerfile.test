@@ -1,4 +1,4 @@
-ARG CERVER_VERSION=2.0b-23
+ARG CERVER_VERSION=2.0b-36
 
 FROM ermiry/cerver-cmongo:buildev-${CERVER_VERSION} as builder
 
