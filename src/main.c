@@ -52,11 +52,11 @@ static void test_set_service_routes (HttpCerver *http_cerver) {
 	http_cerver_route_register (http_cerver, test_route);
 
 	/* register test children routes */
-	// GET api/test/version
+	// GET /api/test/version
 	HttpRoute *test_version_route = http_route_create (REQUEST_METHOD_GET, "version", test_version_handler);
 	http_route_child_add (test_route, test_version_route);
 
-	// GET api/test/auth
+	// GET /api/test/auth
 	HttpRoute *test_auth_route = http_route_create (REQUEST_METHOD_GET, "auth", test_auth_handler);
 	http_route_set_auth (test_auth_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (test_auth_route, test_user_parse_from_json, test_user_delete);
@@ -66,28 +66,28 @@ static void test_set_service_routes (HttpCerver *http_cerver) {
 
 static void test_set_values_routes (HttpCerver *http_cerver) {
 
-	// GET api/values
-	HttpRoute *values_route = http_route_create (REQUEST_METHOD_GET, "values", test_values_handler);
+	// GET /api/values
+	HttpRoute *values_route = http_route_create (REQUEST_METHOD_GET, "api/values", test_values_handler);
 	http_route_set_auth (values_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (values_route, test_user_parse_from_json, test_user_delete);
 	http_cerver_route_register (http_cerver, values_route);
 
-	// POST api/values
+	// POST /api/values
 	http_route_set_handler (values_route, REQUEST_METHOD_POST, test_value_create_handler);
 
-	// GET api/values/:id/info
+	// GET /api/values/:id/info
 	HttpRoute *value_info_route = http_route_create (REQUEST_METHOD_GET, "values/:id/info", test_value_get_handler);
 	http_route_set_auth (value_info_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_info_route, test_user_parse_from_json, test_user_delete);
 	http_route_child_add (values_route, value_info_route);
 
-	// PUT api/values/:id/update
+	// PUT /api/values/:id/update
 	HttpRoute *value_update_route = http_route_create (REQUEST_METHOD_PUT, "values/:id/update", test_value_update_handler);
 	http_route_set_auth (value_update_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_update_route, test_user_parse_from_json, test_user_delete);
 	http_route_child_add (values_route, value_update_route);
 
-	// DELETE api/values/:id/remove
+	// DELETE /api/values/:id/remove
 	HttpRoute *value_remove_route = http_route_create (REQUEST_METHOD_DELETE, "values/:id/remove", test_value_delete_handler);
 	http_route_set_auth (value_remove_route, HTTP_ROUTE_AUTH_TYPE_BEARER);
 	http_route_set_decode_data (value_remove_route, test_user_parse_from_json, test_user_delete);
@@ -103,11 +103,11 @@ static void test_set_users_routes (HttpCerver *http_cerver) {
 	http_cerver_route_register (http_cerver, users_route);
 
 	/* register users children routes */
-	// POST api/users/login
+	// POST /api/users/login
 	HttpRoute *users_login_route = http_route_create (REQUEST_METHOD_POST, "login", users_login_handler);
 	http_route_child_add (users_route, users_login_route);
 
-	// POST api/users/register
+	// POST /api/users/register
 	HttpRoute *users_register_route = http_route_create (REQUEST_METHOD_POST, "register", users_register_handler);
 	http_route_child_add (users_route, users_register_route);
 
