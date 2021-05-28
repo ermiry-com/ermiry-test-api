@@ -137,10 +137,10 @@ static void start (void) {
 
 		http_cerver_auth_set_jwt_algorithm (http_cerver, JWT_ALG_RS256);
 		if (ENABLE_USERS_ROUTES) {
-			http_cerver_auth_set_jwt_priv_key_filename (http_cerver, PRIV_KEY->str);
+			http_cerver_auth_set_jwt_priv_key_filename (http_cerver, PRIV_KEY);
 		}
 
-		http_cerver_auth_set_jwt_pub_key_filename (http_cerver, PUB_KEY->str);
+		http_cerver_auth_set_jwt_pub_key_filename (http_cerver, PUB_KEY);
 
 		test_set_service_routes (http_cerver);
 
