@@ -633,8 +633,6 @@ User *test_user_login (
 				#endif
 
 				*error = TEST_USER_ERROR_NOT_FOUND;
-
-				test_user_delete (user);
 			}
 		}
 	}
@@ -653,7 +651,9 @@ User *test_user_login (
 
 void test_user_delete (void *user_ptr) {
 
-	(void) memset (user_ptr, 0, sizeof (User));
-	(void) pool_push (users_pool, user_ptr);
+	if (user_ptr) {
+		(void) memset (user_ptr, 0, sizeof (User));
+		(void) pool_push (users_pool, user_ptr);
+	}
 
 }
