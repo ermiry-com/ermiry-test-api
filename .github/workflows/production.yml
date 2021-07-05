@@ -1,21 +1,21 @@
-name: Test API Continuous Integration
+name: Test Production Integration
 
 on:
   push:
     branches:
-      - '*'
+      - 'main'
   pull_request:
     branches:
-      - '*'
+      - 'main'
 
 jobs:
   build:
-    name: Test API build
+    name: Test API production build
     runs-on: ubuntu-latest
     container:
-      image: ermiry/cerver-cmongo:buildev-2.0b-36
+      image: ermiry/cerver-cmongo:builder-2.0b-36
     steps:
       - uses: actions/checkout@v2
 
       - name: Build Sources
-        run: make
+        run: make TYPE=production

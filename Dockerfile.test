@@ -1,0 +1,19 @@
+ARG CERVER_VERSION=2.0b-36
+
+FROM ermiry/cerver-cmongo:buildev-${CERVER_VERSION} as builder
+
+WORKDIR /opt/test
+
+# build sources
+COPY . .
+RUN make -j4
+
+############
+FROM ermiry/cerver-cmongo:dev-${CERVER_VERSION}
+
+# test api
+WORKDIR /home/test
+COPY start.sh /home/test/
+COPY --from=builder /opt/test/bin /home/test/bin
+
+CMD ["/bin/bash start.sh"]
