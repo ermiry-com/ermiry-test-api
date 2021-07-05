@@ -1,19 +1,17 @@
 ## General
-- Added main test methods & values in dedicated source
-- Added runtime definitions & methods
+- Updated cerver to 2.0b-43 and cmongo to 1.0b-13
+- Refactored service custom errors definitions
+- Refactored test Dockerfile build steps
+- Added base production Dockerfile
+- Refactored continuous integration workflow
+- Added workflow to build test image
+- Refactored production image build workflow
+- Added dedicated workflow to create releases
 
 ## Models
-- Added base role & action models
-- Added base user model
-- Added base value model
+- Updated role action model implementation
+- Updated main role model implementation
+- Updated user model implementation
 
 ## Controllers
-- Added base service controller
-- Added dedicated roles controller
-- Added dedicated users controller
-- Added base values controller
-
-## Routes
-- Added base service routes
-- Added users login & register routes
-- Added base values routes handlers
+- Refactored roles controller methods
