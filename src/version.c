@@ -2,7 +2,7 @@
 
 #include "version.h"
 
-// print full pocket version information
+// print full test version information
 void test_version_print_full (void) {
 
 	cerver_log_both (

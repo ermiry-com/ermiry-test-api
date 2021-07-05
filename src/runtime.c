@@ -4,7 +4,7 @@
 
 #include "runtime.h"
 
-const char *runtime_to_string (RuntimeType type) {
+const char *runtime_to_string (const RuntimeType type) {
 
 	switch (type) {
 		#define XX(num, name, string) case RUNTIME_TYPE_##name: return #string;

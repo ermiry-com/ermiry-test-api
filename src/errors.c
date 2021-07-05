@@ -3,8 +3,8 @@
 #include <cerver/http/http.h>
 #include <cerver/http/response.h>
 
-#include "errors.h"
 #include "test.h"
+#include "errors.h"
 
 #include "controllers/service.h"
 
@@ -27,6 +27,10 @@ void test_error_send_response (
 
 	switch (error) {
 		case TEST_ERROR_NONE: break;
+
+		case TEST_ERROR_EXISTING_VALUE:
+			(void) http_response_send (existing_value, http_receive);
+			break;
 
 		case TEST_ERROR_BAD_REQUEST:
 			(void) http_response_send (bad_request_error, http_receive);

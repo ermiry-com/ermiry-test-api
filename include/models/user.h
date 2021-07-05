@@ -1,22 +1,22 @@
 #ifndef _MODELS_USER_H_
 #define _MODELS_USER_H_
 
+#include <stdbool.h>
+
 #include <time.h>
 
 #include <bson/bson.h>
 #include <mongoc/mongoc.h>
 
-#include <cerver/types/types.h>
-#include <cerver/types/string.h>
+#define USERS_COLL_NAME				"users"
 
-#define USERS_COLL_NAME			"users"
-
-#define USER_ID_SIZE			32
-#define USER_EMAIL_SIZE			128
-#define USER_NAME_SIZE			128
-#define USER_USERNAME_SIZE		128
-#define USER_PASSWORD_SIZE		128
-#define USER_ROLE_SIZE			64
+#define USER_ID_SIZE				32
+#define USER_NAME_SIZE				128
+#define USER_EMAIL_SIZE				128
+#define USER_USERNAME_SIZE			128
+#define USER_PASSWORD_SIZE			128
+#define USER_ROLE_SIZE				64
+#define USER_DATE_BUFFER_SIZE		128
 
 extern unsigned int users_model_init (void);
 
@@ -25,25 +25,33 @@ extern void users_model_end (void);
 typedef struct User {
 
 	// user's unique id
-	char id[USER_ID_SIZE];
 	bson_oid_t oid;
+	char id[USER_ID_SIZE];
 
 	// main user values
-	char email[USER_EMAIL_SIZE];
+	unsigned int name_len;
 	char name[USER_NAME_SIZE];
+
+	unsigned int email_len;
+	char email[USER_EMAIL_SIZE];
+
+	unsigned int username_len;
 	char username[USER_USERNAME_SIZE];
+
+	unsigned int password_len;
 	char password[USER_PASSWORD_SIZE];
 
-	// the role this user belongs to
-	// based on its role, a user can perform different operations
-	char role[USER_ROLE_SIZE];
 	bson_oid_t role_oid;
+	char role[USER_ROLE_SIZE];
+
+	bool first_time;
+
+	// when the user was added
+	time_t date;
+	char date_str[USER_DATE_BUFFER_SIZE];
 
 	// used to validate JWT expiration
 	time_t iat;
-
-	// how many values the user has registered
-	int values_count;
 
 } User;
 
@@ -51,26 +59,19 @@ extern void *user_new (void);
 
 extern void user_delete (void *user_ptr);
 
-extern void user_print (User *user);
+extern void user_print (const User *user);
 
-extern bson_t *user_query_id (const char *id);
-
-extern bson_t *user_query_email (const char *email);
-
-extern u8 user_get_by_id (
-	User *user, const char *id, const bson_t *query_opts
+extern unsigned int user_get_by_oid (
+	User *user,
+	const bson_oid_t *oid, const bson_t *query_opts
 );
 
-extern u8 user_check_by_email (const char *email);
+extern bool user_check_by_email (
+	const char *email
+);
 
-// gets a user from the db by its email
-extern u8 user_get_by_email (
+extern unsigned int user_get_by_email (
 	User *user, const char *email, const bson_t *query_opts
-);
-
-// gets a user from the db by its username
-extern u8 user_get_by_username (
-	User *user, const String *username, const bson_t *query_opts
 );
 
 extern unsigned int user_insert_one (const User *user);

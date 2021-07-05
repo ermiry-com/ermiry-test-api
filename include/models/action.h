@@ -4,10 +4,10 @@
 #include <bson/bson.h>
 #include <mongoc/mongoc.h>
 
-#define ACTIONS_COLL_NAME  			"actions"
+#define ACTIONS_COLL_NAME  				"actions"
 
-#define ACTION_NAME_SIZE			128
-#define ACTION_DESCRIPTION_SIZE		256
+#define ACTION_NAME_SIZE				128
+#define ACTION_DESCRIPTION_SIZE			256
 
 extern unsigned int actions_model_init (void);
 
@@ -32,28 +32,11 @@ extern RoleAction *action_create (
 	const char *name, const char *description
 );
 
-extern void action_print (RoleAction *action);
-
-// creates a action bson with all action parameters
-extern bson_t *action_bson_create (
-	RoleAction *action
-);
-
-extern void action_doc_parse (
-	void *action_ptr, const bson_t *action_doc
-);
+extern void action_print (const RoleAction *action);
 
 // gets an action form the db by its name
 extern RoleAction *action_get_by_name (
 	const char *name
-);
-
-extern bson_t *action_bson_create_name_query (
-	const char *name
-);
-
-extern bson_t *action_bson_create_update (
-	const char *name, const char *description
 );
 
 #endif
