@@ -15,7 +15,7 @@ static DoubleList *roles = NULL;
 
 const Role *common_role = NULL;
 
-const Role *test_role_get_by_name (
+const Role *test_roles_get_by_name (
 	const char *role_name
 );
 
@@ -25,40 +25,43 @@ static unsigned int test_roles_init_get_roles (void) {
 
 	CMongoSelect *select = cmongo_select_new ();
 	cmongo_select_insert_field (select, "name");
+	cmongo_select_insert_field (select, "actions");
 
-	uint64_t n_docs = 0;
-	mongoc_cursor_t *roles_cursor = role_find_all (select, &n_docs);
-	if (roles_cursor) {
-		Role *role = NULL;
-		const bson_t *role_doc = NULL;
-		unsigned int errors = 0;
-		while (mongoc_cursor_next (roles_cursor, &role_doc)) {
-			role = role_new ();
-			if (role) {
-				role_doc_parse (role, role_doc);
+	roles = roles_get_all (select);
+	if (roles) {
+		cerver_log_success ("Got roles from db!");
 
-				errors |= dlist_insert_after (
-					roles,
-					dlist_end (roles),
-					role
-				);
-			}
-
-			else {
-				errors |= 1;
-			}
-		}
-
-		mongoc_cursor_destroy (roles_cursor);
-
-		retval = errors;
+		retval = 0;
 	}
 
 	else {
-		(void) fprintf (stderr, "Failed to get roles cursor!");
+		cerver_log_error ("Failed to get roles from db!");
 	}
 
 	cmongo_select_delete (select);
+
+	return retval;
+
+}
+
+static unsigned int test_roles_init_get_common (void) {
+
+	unsigned int retval = 1;
+
+	Role role_query = { 0 };
+	(void) strncpy (role_query.name, "common", ROLE_NAME_SIZE - 1);
+
+	common_role = (const Role *) dlist_search (
+		roles, &role_query, role_comparator_by_name
+	);
+
+	if (common_role) {
+		retval = 0;
+	}
+
+	else {
+		cerver_log_error ("Failed to get common role!");
+	}
 
 	return retval;
 
@@ -70,8 +73,7 @@ unsigned int test_roles_init (void) {
 
 	roles = dlist_init (role_delete, NULL);
 	if (!test_roles_init_get_roles ()) {
-		common_role = test_role_get_by_name ("common");
-		if (common_role) {
+		if (!test_roles_init_get_common ()) {
 			retval = 0;
 		}
 	}
@@ -86,7 +88,9 @@ void test_roles_end (void) {
 
 }
 
-const Role *test_role_get_by_oid (const bson_oid_t *role_oid) {
+const Role *test_roles_get_by_oid (
+	const bson_oid_t *role_oid
+) {
 
 	const Role *retval = NULL;
 
@@ -103,7 +107,7 @@ const Role *test_role_get_by_oid (const bson_oid_t *role_oid) {
 
 }
 
-const Role *test_role_get_by_name (
+const Role *test_roles_get_by_name (
 	const char *role_name
 ) {
 
@@ -122,15 +126,43 @@ const Role *test_role_get_by_name (
 
 }
 
-const char *test_role_name_get_by_oid (
+const char *test_roles_name_get_by_oid (
 	const bson_oid_t *role_oid
 ) {
 
 	const char *retval = NULL;
 
-	const Role *role = test_role_get_by_oid (role_oid);
+	const Role *role = test_roles_get_by_oid (role_oid);
 	if (role) {
 		retval = role->name;
+	}
+
+	return retval;
+
+}
+
+bool test_role_search_and_check_action (
+	const char *role_name, const char *action_name
+) {
+
+	bool retval = false;
+
+	if (role_name && action_name) {
+		Role *role = NULL;
+		for (ListElement *le = dlist_start (roles); le; le = le->next) {
+			role = (Role *) le->data;
+			if (!strcmp (role->name, role_name)) {
+				// search action in role
+				for (unsigned int idx = 0; idx < role->n_actions; idx++) {
+					if (!strcmp (role->actions[idx], action_name)) {
+						retval = true;
+						break;
+					}
+				}
+
+				break;
+			}
+		}
 	}
 
 	return retval;
