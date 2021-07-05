@@ -15,8 +15,12 @@ typedef enum RuntimeType {
 
 } RuntimeType;
 
-extern const char *runtime_to_string (RuntimeType type);
+extern const char *runtime_to_string (
+	const RuntimeType type
+);
 
-extern const RuntimeType runtime_from_string (const char *string);
+extern const RuntimeType runtime_from_string (
+	const char *string
+);
 
 #endif
