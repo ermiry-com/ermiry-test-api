@@ -281,7 +281,7 @@ unsigned int test_user_generate_token (
 		http_cerver_auth_jwt_add_value (http_jwt, "id", user->id);
 		http_cerver_auth_jwt_add_value (http_jwt, "email", user->email);
 		http_cerver_auth_jwt_add_value (http_jwt, "name", user->name);
-		http_cerver_auth_jwt_add_value (http_jwt, "role", test_role_name_get_by_oid (&user->role_oid));
+		http_cerver_auth_jwt_add_value (http_jwt, "role", test_roles_name_get_by_oid (&user->role_oid));
 		http_cerver_auth_jwt_add_value (http_jwt, "username", user->username);
 
 		// generate & send back auth token
