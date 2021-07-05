@@ -156,7 +156,7 @@ static void start (void) {
 		if (cerver_start (test_api)) {
 			cerver_log_error (
 				"Failed to start %s!",
-				test_api->info->name->str
+				test_api->info->name
 			);
 
 			cerver_delete (test_api);
