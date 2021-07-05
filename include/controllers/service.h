@@ -3,6 +3,7 @@
 
 struct _HttpResponse;
 
+extern struct _HttpResponse *existing_value;
 extern struct _HttpResponse *missing_values;
 
 extern struct _HttpResponse *test_works;
